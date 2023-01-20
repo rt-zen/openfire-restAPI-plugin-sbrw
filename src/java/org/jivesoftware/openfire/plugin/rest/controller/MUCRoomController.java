@@ -27,6 +27,7 @@ import org.jivesoftware.openfire.plugin.rest.entity.*;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ExceptionType;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ServiceException;
 import org.jivesoftware.openfire.plugin.rest.utils.MUCRoomUtils;
+import org.jivesoftware.openfire.plugin.rest.utils.ServerUtils;
 import org.jivesoftware.openfire.plugin.rest.utils.UserUtils;
 import org.jivesoftware.util.AlreadyExistsException;
 import org.jivesoftware.util.JiveGlobals;
@@ -1203,5 +1204,34 @@ public class MUCRoomController {
             // Completely unknown implementation of MUCRoom::send
             throw new ServiceException("Could not delete affiliation", jid, ExceptionType.ILLEGAL_ARGUMENT_EXCEPTION, Response.Status.INTERNAL_SERVER_ERROR, e);
         }
+    }
+
+    public GamePersonaGroupEntity getGamePersonaGroup(Long personaId) throws ServiceException {
+        final MultiUserChatService service = MUCServiceController.getService("conference");
+        JID userJid = ServerUtils.getFullJid(String.format("sbrw.%d", personaId), "EA-Chat");
+
+        for (Map.Entry<String, MUCRoom> roomEntry : service.getLocalMUCRoomManager().getLocalRooms().entrySet()) {
+            // We only want group channels...
+            if (!roomEntry.getKey().startsWith("group.channel."))
+                continue;
+            final MUCRole role = roomEntry.getValue().getOccupantByFullJID(userJid);
+            // ...that the player is in...
+            if (role == null)
+                continue;
+
+            List<Long> personaIds = new ArrayList<>();
+            for (MUCRole occupant : roomEntry.getValue().getOccupants()) {
+                final JID occupantUserAddress = occupant.getUserAddress();
+                if (occupantUserAddress == null)
+                    continue;
+                String occupantNode = occupantUserAddress.getNode();
+                String[] nodeParts = occupantNode.split("\\.");
+                personaIds.add(Long.parseLong(nodeParts[1]));
+            }
+
+            return new GamePersonaGroupEntity(personaIds);
+        }
+
+        return new GamePersonaGroupEntity();
     }
 }

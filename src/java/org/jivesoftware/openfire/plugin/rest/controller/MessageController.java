@@ -19,9 +19,12 @@ package org.jivesoftware.openfire.plugin.rest.controller;
 import javax.ws.rs.core.Response;
 
 import org.jivesoftware.openfire.SessionManager;
+import org.jivesoftware.openfire.XMPPServer;
 import org.jivesoftware.openfire.plugin.rest.entity.MessageEntity;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ExceptionType;
 import org.jivesoftware.openfire.plugin.rest.exceptions.ServiceException;
+import org.jivesoftware.openfire.plugin.rest.utils.ServerUtils;
+import org.xmpp.packet.Message;
 
 /**
  * The Class MessageController.
@@ -57,4 +60,34 @@ public class MessageController {
         }
     }
 
+
+    /**
+     * Send client-compatible broadcast message.
+     *
+     * @param messageEntity the message entity
+     * @throws ServiceException when an empty message is provided
+     */
+    public void sendGameBroadcastMessage(String messageEntity) throws ServiceException {
+        // Build the system message XML
+        String systemMsg = String.format("<response status='1' ticket='0'>\n" +
+            "<ChatBroadcast>\n" +
+            "<ChatBlob>\n" +
+            "<FromName>System</FromName>\n" +
+            "<FromPersonaId>0</FromPersonaId>\n" +
+            "<FromUserId>0</FromUserId>\n" +
+            "<Message>%s</Message>\n" +
+            "<ToId>0</ToId>\n" +
+            "<Type>2</Type>\n" +
+            "</ChatBlob>\n" +
+            "</ChatBroadcast>\n" +
+            "</response>", messageEntity);
+
+        Message xmppMessage = new Message();
+        xmppMessage.setSubject("1337733113377331");
+        xmppMessage.setFrom(ServerUtils.getServerAddress());
+        xmppMessage.setID("JN_1234567");
+        xmppMessage.setBody(systemMsg);
+
+        XMPPServer.getInstance().getSessionManager().broadcast(xmppMessage);
+    }
 }

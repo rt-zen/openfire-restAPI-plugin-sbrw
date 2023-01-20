@@ -280,4 +280,13 @@ public class MUCRoomService {
         return Response.status(Status.OK).build();
     }
 
+    @GET
+    @Path("/game/persona/{personaId}/group")
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public GamePersonaGroupEntity getGamePersonaGroup(
+        @PathParam("personaId") Long personaId)
+        throws ServiceException
+    {
+        return MUCRoomController.getInstance().getGamePersonaGroup(personaId);
+    }
 }
