@@ -57,7 +57,7 @@ public class UserServiceLegacy {
     @PostConstruct
     public void init() {
         plugin = (RESTServicePlugin) XMPPServer.getInstance().getPluginManager()
-                .getPlugin("restapi");
+                .getPluginByName("REST API").orElse(null);
         userServiceController = UserServiceLegacyController.getInstance();
     }
 
@@ -187,7 +187,7 @@ public class UserServiceLegacy {
         } catch (SharedGroupException e) {
             replyError("SharedGroupException", response, out);
         } catch (Exception e) {
-            LOG.error("Error: ", e);
+            LOG.error("Unexpected error while processing 'userservice' request of type '{}' for username '{}'", type, username, e);
             replyError(e.toString(), response, out);
         }
         return Response.status(200).build();
